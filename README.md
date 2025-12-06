@@ -1,6 +1,7 @@
 # Service Manager (Non-Native systemd Services)
 
 Web-based service manager with PAM login and group gating; lists non-native systemd services and allows start/stop/restart.
+<img width="1147" height="864" alt="grafik" src="https://github.com/user-attachments/assets/81bf0467-cd34-42f9-bc2a-a8842d0c5436" />
 
 ## What it does
 - Authenticates against local users via PAM; access is limited to a Unix group (default `svcweb`).
