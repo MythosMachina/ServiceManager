@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Service Manager</title>
+  <style>
+    :root {
+      --bg: #0c0f1a;
+      --panel: #11182b;
+      --panel-2: #0f1422;
+      --accent: #7dd3fc;
+      --accent-2: #60a5fa;
+      --text: #e8ecf7;
+      --muted: #9aa8c0;
+      --danger: #f87171;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --border: rgba(255, 255, 255, 0.06);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(96,165,250,0.07), transparent 35%),
+                  radial-gradient(circle at 80% 0%, rgba(125,211,252,0.08), transparent 25%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 20px 24px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: linear-gradient(180deg, rgba(12,15,26,0.92), rgba(12,15,26,0.72), transparent);
+      backdrop-filter: blur(10px);
+    }
+    h1 {
+      margin: 0;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+    .pill {
+      padding: 6px 12px;
+      border-radius: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .container {
+      padding: 0 24px 32px;
+      flex: 1;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      position: relative;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: 16px;
+      border: 1px solid rgba(125,211,252,0.05);
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 17px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .tag {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 10px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+    }
+    .desc { color: var(--muted); margin: 0 0 12px; line-height: 1.4; }
+    .meta { font-size: 12px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: #0c0f1a;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+    button:active { transform: translateY(1px) scale(0.99); }
+    .btn-start { background: linear-gradient(135deg, #34d399, #10b981); box-shadow: 0 8px 24px rgba(16,185,129,0.3); }
+    .btn-stop { background: linear-gradient(135deg, #f87171, #ef4444); box-shadow: 0 8px 24px rgba(239,68,68,0.25); }
+    .status {
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.3px;
+    }
+    .ok { background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.4); }
+    .warn { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.35); }
+    .bad { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.4); }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .search {
+      padding: 9px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      min-width: 220px;
+    }
+    .toast {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      padding: 12px 14px;
+      background: #11182b;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 12px;
+      color: var(--text);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.3);
+      display: none;
+      min-width: 240px;
+      z-index: 20;
+    }
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 9, 16, 0.9);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+    }
+    .login-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      width: min(360px, 92vw);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+    .login-box h2 { margin: 0 0 12px; }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .field label { color: var(--muted); font-size: 13px; }
+    .field input {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .muted { color: var(--muted); font-size: 13px; }
+    .chip {
+      padding: 4px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .fav {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 12px;
+      box-shadow: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .fav.active { color: #fbbf24; border-color: rgba(251,191,36,0.4); }
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(12,15,26,0.92);
+      border-top: 1px solid var(--border);
+      padding: 8px 16px;
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Service Manager</h1>
+      <div class="muted">Nur Nicht-Standard-Systemd Dienste</div>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <div id="userPill" class="pill" style="display:none;"></div>
+      <button id="logoutBtn" class="btn-stop" style="display:none;">Logout</button>
+    </div>
+  </header>
+  <div class="container">
+    <div class="toolbar">
+      <div class="pill">Gruppe: <strong id="groupName">svcweb</strong></div>
+      <div class="pill">Port: <strong id="portInfo">3001</strong></div>
+      <div class="pill" id="lastRefresh">Aktualisiert: -</div>
+      <button class="btn-start" id="refreshBtn">Neu laden</button>
+      <input id="searchInput" class="search" placeholder="Services filtern..." />
+    </div>
+    <div id="grid" class="grid"></div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div class="login-overlay" id="loginOverlay" style="display:flex;">
+    <div class="login-box">
+      <h2>Login</h2>
+      <p class="muted">Authentifizierung über lokale Accounts (PAM) + Gruppenzugehörigkeit.</p>
+      <form id="loginForm">
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" name="username" required autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="password">Passwort</label>
+          <input id="password" type="password" name="password" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn-start" style="width:100%;">Anmelden</button>
+        <div id="loginError" class="muted" style="margin-top:8px;color:#f87171;"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const gridEl = document.getElementById('grid');
+    const toastEl = document.getElementById('toast');
+    const loginOverlay = document.getElementById('loginOverlay');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const userPill = document.getElementById('userPill');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const lastRefresh = document.getElementById('lastRefresh');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const searchInput = document.getElementById('searchInput');
+
+    let services = [];
+    let favorites = new Set(JSON.parse(localStorage.getItem('svc_favs') || '[]'));
+    let query = '';
+
+    function showToast(msg) {
+      toastEl.innerText = msg;
+      toastEl.style.display = 'block';
+      setTimeout(() => (toastEl.style.display = 'none'), 2800);
+    }
+
+    function renderServices() {
+      gridEl.innerHTML = '';
+      const filtered = services.filter((s) => {
+        if (!query) return true;
+        const q = query.toLowerCase();
+        return (
+          s.name.toLowerCase().includes(q) ||
+          (s.description || '').toLowerCase().includes(q) ||
+          (s.packageName || '').toLowerCase().includes(q)
+        );
+      });
+      filtered
+        .sort((a, b) => {
+          const af = favorites.has(a.name);
+          const bf = favorites.has(b.name);
+          if (af && !bf) return -1;
+          if (!af && bf) return 1;
+          return a.description.localeCompare(b.description);
+        })
+        .forEach((svc) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const active = svc.activeState === 'active';
+        const statusClass = active ? 'ok' : svc.activeState === 'activating' ? 'warn' : 'bad';
+        const statusLabel = active ? 'Läuft' : svc.activeState === 'inactive' ? 'Gestoppt' : svc.activeState;
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <h3>${svc.description}</h3>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="fav ${favorites.has(svc.name) ? 'active' : ''}" data-fav="${svc.name}" title="Favorit">★</button>
+              <span class="status ${statusClass}">${statusLabel}</span>
+            </div>
+          </div>
+          <p class="desc">${svc.name}</p>
+          <div class="meta">
+            <span class="tag">${svc.packageName || 'unbekannt'}</span>
+            <span class="tag">Priority: ${svc.priority || 'n/a'}</span>
+            <span class="tag">${svc.unitFileState}</span>
+          </div>
+          <div class="meta" style="margin:10px 0 14px;">
+            <span class="chip">Fragment: ${svc.fragmentPath || 'n/a'}</span>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            ${
+              active
+                ? `<button class="btn-stop" data-action="stop" data-name="${svc.name}">Stop</button>`
+                : `<button class="btn-start" data-action="start" data-name="${svc.name}">Start</button>`
+            }
+            <button class="btn-start" style="background:linear-gradient(135deg,#94a3b8,#64748b)" data-action="restart" data-name="${svc.name}">Restart</button>
+          </div>
+        `;
+        gridEl.appendChild(card);
+      });
+      attachActionHandlers();
+      attachFavoriteHandlers();
+      lastRefresh.innerText = 'Aktualisiert: ' + new Date().toLocaleTimeString();
+    }
+
+    function attachActionHandlers() {
+      gridEl.querySelectorAll('button[data-action]').forEach((btn) => {
+        btn.onclick = async (e) => {
+          const action = btn.dataset.action;
+          const name = btn.dataset.name;
+          btn.disabled = true;
+          btn.innerText = action === 'start' ? 'Starte...' : action === 'stop' ? 'Stoppe...' : 'Neustart...';
+          try {
+            const res = await fetch(`/api/services/${name}/${action}`, { method: 'POST' });
+            if (!res.ok) throw new Error('Aktion fehlgeschlagen');
+            showToast(`${name} ${action} ok`);
+            await loadServices();
+          } catch (err) {
+            showToast(err.message);
+          } finally {
+            btn.disabled = false;
+          }
+        };
+      });
+    }
+
+    function attachFavoriteHandlers() {
+      gridEl.querySelectorAll('button[data-fav]').forEach((btn) => {
+        btn.onclick = () => {
+          const name = btn.dataset.fav;
+          if (favorites.has(name)) {
+            favorites.delete(name);
+            btn.classList.remove('active');
+          } else {
+            favorites.add(name);
+            btn.classList.add('active');
+          }
+          localStorage.setItem('svc_favs', JSON.stringify(Array.from(favorites)));
+          renderServices();
+        };
+      });
+    }
+
+    async function loadServices() {
+      const res = await fetch('/api/services');
+      if (res.status === 401) {
+        loginOverlay.style.display = 'flex';
+        return;
+      }
+      const data = await res.json();
+      services = data.services || [];
+      renderServices();
+    }
+
+    async function checkAuth() {
+      const res = await fetch('/api/me');
+      const data = await res.json();
+      if (data.authenticated) {
+        loginOverlay.style.display = 'none';
+        userPill.style.display = 'inline-flex';
+        userPill.innerText = data.user;
+        logoutBtn.style.display = 'inline-flex';
+        await loadServices();
+      } else {
+        loginOverlay.style.display = 'flex';
+      }
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loginError.innerText = '';
+      const formData = new FormData(loginForm);
+      const body = {
+        username: formData.get('username'),
+        password: formData.get('password'),
+      };
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Login fehlgeschlagen');
+        }
+        loginOverlay.style.display = 'none';
+        await checkAuth();
+      } catch (err) {
+        loginError.innerText = err.message;
+      }
+    });
+
+    logoutBtn.onclick = async () => {
+      await fetch('/logout', { method: 'POST' });
+      loginOverlay.style.display = 'flex';
+      userPill.style.display = 'none';
+      logoutBtn.style.display = 'none';
+    };
+
+    refreshBtn.onclick = loadServices;
+    searchInput.oninput = (e) => {
+      query = e.target.value;
+      renderServices();
+    };
+
+    checkAuth();
+  </script>
+  <footer>
+    <div>Service Manager</div>
+    <div>© MythosMachina – <a href="https://github.com/MythosMachina/ServiceManager" style="color:var(--accent);text-decoration:none;">MIT Lizenz</a></div>
+  </footer>
+</body>
+</html>

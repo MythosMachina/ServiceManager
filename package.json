@@ -1,0 +1,21 @@
+{
+  "name": "serveradmin",
+  "version": "1.0.0",
+  "description": "Lightweight web UI to manage non-native systemd services with PAM auth",
+  "main": "app.js",
+  "scripts": {
+    "start": "NODE_ENV=production node app.js",
+    "dev": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "authenticate-pam": "^1.0.5",
+    "express": "^5.2.1",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0"
+  }
+}

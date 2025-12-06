@@ -1,0 +1,17 @@
+[Unit]
+Description=Service Manager WebUI (non-native systemd services)
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/service-manager
+EnvironmentFile=-/etc/default/service-webui
+ExecStart=/usr/bin/node /opt/service-manager/app.js
+Restart=on-failure
+RestartSec=3
+User=root
+Group=root
+AmbientCapabilities=CAP_SYS_ADMIN CAP_DAC_OVERRIDE CAP_SETUID CAP_SETGID
+NoNewPrivileges=false
+
+[Install]
+WantedBy=multi-user.target
